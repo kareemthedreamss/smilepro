@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#151515">
+<title>Specter Wallet (Demo)</title>
+<style>
+  :root{
+    --bg:#151515; --card:#222; --card2:#2c2c2c; --text:#fff; --muted:#999;
+    --accent:#ab9ff2; --green:#21e56f; --red:#ff5b5b; --line:#333;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:#0b0b0b;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif}
+  .app{max-width:430px;min-height:100vh;margin:0 auto;background:var(--bg);position:relative;padding-bottom:84px;overflow:hidden}
+  @media(min-width:500px){.app{min-height:860px;margin-top:20px;border-radius:28px;border:1px solid var(--line);min-height:calc(100vh - 40px)}}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 6px}
+  .acct{display:flex;align-items:center;gap:10px;cursor:pointer}
+  .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#ab9ff2,#6c4cf0);display:grid;place-items:center;font-weight:700;font-size:14px}
+  .acct b{font-size:15px}
+  .iconbtn{background:var(--card);border:0;color:var(--text);width:36px;height:36px;border-radius:50%;font-size:16px;cursor:pointer}
+  .balance{text-align:center;padding:18px 16px 6px}
+  .balance .total{font-size:44px;font-weight:700;letter-spacing:-1px}
+  .balance .chg{margin-top:4px;font-size:15px;font-weight:600}
+  .up{color:var(--green)} .down{color:var(--red)}
+  .actions{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:18px 16px}
+  .act{background:var(--card);border:0;border-radius:14px;color:var(--text);padding:12px 0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:600}
+  .act span{font-size:20px;color:var(--accent)}
+  .act:active,.row:active{background:var(--card2)}
+  .section{padding:0 16px}
+  .section h3{margin:10px 2px 10px;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center}
+  .row{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:13px 14px;margin-bottom:8px;cursor:pointer}
+  .coin{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:15px;color:#fff;flex:none}
+  .row .mid{flex:1;min-width:0}
+  .row .mid b{display:block;font-size:15px}
+  .row .mid small{color:var(--muted);font-size:13px}
+  .row .end{text-align:right}
+  .row .end b{display:block;font-size:15px}
+  .row .end small{font-size:13px;font-weight:600}
+  nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#111;border-top:1px solid var(--line);display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
+  @media(min-width:500px){nav{bottom:20px;border-radius:0 0 28px 28px}}
+  nav button{flex:1;background:none;border:0;color:var(--muted);font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px}
+  nav button span{font-size:20px}
+  nav button.on{color:var(--accent)}
+  /* sheets */
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:10}
+  .scrim.show{display:block}
+  .sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%) translateY(100%);width:100%;max-width:430px;max-height:90vh;overflow:auto;background:var(--bg);border-radius:24px 24px 0 0;padding:18px 18px 28px;z-index:11;transition:transform .22s ease;border:1px solid var(--line);border-bottom:0}
+  .sheet.show{transform:translateX(-50%) translateY(0)}
+  .sheet h2{margin:0 0 14px;font-size:18px;display:flex;justify-content:space-between;align-items:center}
+  label{display:block;font-size:12px;color:var(--muted);margin:12px 2px 6px;font-weight:600}
+  input,select{width:100%;background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:13px;font-size:16px;outline:none}
+  input:focus,select:focus{border-color:var(--accent)}
+  .btn{width:100%;border:0;border-radius:14px;padding:15px;font-size:16px;font-weight:700;margin-top:16px;cursor:pointer;background:var(--accent);color:#151515}
+  .btn.ghost{background:var(--card);color:var(--text)}
+  .btn.danger{background:#3a1f1f;color:var(--red)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .detail-top{text-align:center;margin-bottom:8px}
+  .detail-top .coin{margin:0 auto 10px;width:56px;height:56px;font-size:22px}
+  .detail-top .big{font-size:32px;font-weight:700}
+  .detail-top small{color:var(--muted)}
+  .qr{width:180px;height:180px;margin:10px auto;background:#fff;border-radius:16px;padding:10px;display:grid;grid-template-columns:repeat(21,1fr)}
+  .qr i{background:#000}.qr i.w{background:#fff}
+  .addr{background:var(--card);border-radius:12px;padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:12px;word-break:break-all;text-align:center}
+  .tx{display:flex;gap:12px;align-items:center;background:var(--card);border-radius:14px;padding:13px 14px;margin-bottom:8px}
+  .tx .ic{width:38px;height:38px;border-radius:50%;background:var(--card2);display:grid;place-items:center;font-size:18px}
+  .tx .mid{flex:1}.tx .mid b{display:block;font-size:15px}.tx .mid small{color:var(--muted);font-size:12px}
+  .toast{position:fixed;top:18px;left:50%;transform:translate(-50%,-80px);background:#2b2b2b;border:1px solid var(--line);padding:11px 18px;border-radius:12px;font-size:14px;font-weight:600;z-index:30;transition:transform .25s}
+  .toast.show{transform:translate(-50%,0)}
+  .foot{text-align:center;color:#555;font-size:11px;padding:18px 0 6px}
+  .hide-bal .total,.hide-bal .row .end{filter:blur(9px)}
+  .empty{color:var(--muted);text-align:center;padding:30px 0;font-size:14px}
+  .pill{font-size:11px;background:var(--card2);color:var(--accent);border-radius:99px;padding:3px 9px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header>
+    <div class="acct" onclick="openAccount()">
+      <div class="avatar" id="avatar">A</div>
+      <b id="acctName">Account 1</b> <span style="color:var(--muted);font-size:11px">▾</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="iconbtn" onclick="toggleHide()" title="Hide balance">👁</button>
+      <button class="iconbtn" onclick="openSettings()" title="Settings">⚙</button>
+    </div>
+  </header>
+
+  <div id="viewHome">
+    <div class="balance">
+      <div class="total" id="total">$0.00</div>
+      <div class="chg" id="chg"></div>
+    </div>
+    <div class="actions">
+      <button class="act" onclick="openReceive()"><span>⬇</span>Receive</button>
+      <button class="act" onclick="openSend()"><span>➤</span>Send</button>
+      <button class="act" onclick="openSwap()"><span>⇄</span>Swap</button>
+      <button class="act" onclick="openBuy()"><span>＋</span>Buy</button>
+    </div>
+    <div class="section">
+      <h3>Tokens <span class="pill" onclick="openAddToken()" style="cursor:pointer">+ Add token</span></h3>
+      <div id="tokens"></div>
+    </div>
+  </div>
+
+  <div id="viewActivity" style="display:none">
+    <div class="section" style="padding-top:14px">
+      <h3>Recent activity</h3>
+      <div id="activity"></div>
+    </div>
+  </div>
+
+  <div class="foot">Demo wallet · simulated balances, not a real wallet</div>
+
+  <nav>
+    <button class="on" id="navHome" onclick="go('Home')"><span>◉</span>Home</button>
+    <button id="navActivity" onclick="go('Activity')"><span>☰</span>Activity</button>
+    <button onclick="openSettings()"><span>⚙</span>Settings</button>
+  </nav>
+</div>
+
+<div class="scrim" id="scrim" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = 'specter-demo-v1';
+const COLORS = ['#9945ff','#26a17b','#2775ca','#627eea','#f7931a','#e8a317','#00c2a8','#ff5b5b','#3b82f6','#ec4899'];
+
+const DEFAULTS = () => ({
+  name: 'Account 1',
+  address: randAddr(),
+  hidden: false,
+  tokens: [
+    {sym:'SOL',  name:'Solana',      price:148.20, chg: 3.42, bal:12.5,   color:'#9945ff'},
+    {sym:'USDT', name:'Tether USD',  price:1.00,   chg: 0.01, bal:2500,   color:'#26a17b'},
+    {sym:'USDC', name:'USD Coin',    price:1.00,   chg:-0.02, bal:1200,   color:'#2775ca'},
+    {sym:'ETH',  name:'Ethereum',    price:3120.5, chg: 1.87, bal:0.85,   color:'#627eea'},
+    {sym:'BTC',  name:'Bitcoin',     price:64200,  chg:-0.65, bal:0.05,   color:'#f7931a'},
+    {sym:'BONK', name:'Bonk',        price:0.000024, chg: 8.1, bal:45000000, color:'#e8a317'},
+    {sym:'JUP',  name:'Jupiter',     price:1.12,   chg:-2.4,  bal:800,    color:'#00c2a8'},
+  ],
+  activity: []
+});
+
+function randAddr(){
+  const a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+  let s='';for(let i=0;i<44;i++)s+=a[Math.floor(Math.random()*a.length)];return s;
+}
+let S;
+try{ S = JSON.parse(localStorage.getItem(KEY)) }catch(e){}
+if(!S || !S.tokens) S = DEFAULTS();
+const save = () => { try{localStorage.setItem(KEY, JSON.stringify(S))}catch(e){} };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const usd = n => '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+function price(p){ return p>=1 ? usd(p) : '$'+p.toFixed(p<0.001?8:4) }
+function amt(n){ return n.toLocaleString('en-US',{maximumFractionDigits: n>=1000?2:6}) }
+const tok = sym => S.tokens.find(t=>t.sym===sym);
+const val = t => t.bal * t.price;
+const coin = t => `<div class="coin" style="background:${esc(t.color)}">${esc(t.sym.slice(0,t.sym.length>3?2:1))}</div>`;
+
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1800)}
+function log(icon,title,sub,right){S.activity.unshift({icon,title,sub,right,ts:Date.now()});S.activity=S.activity.slice(0,50)}
+
+function render(){
+  $('acctName').textContent = S.name;
+  $('avatar').textContent = (S.name[0]||'A').toUpperCase();
+  $('app').classList.toggle('hide-bal', !!S.hidden);
+  const total = S.tokens.reduce((a,t)=>a+val(t),0);
+  const prev  = S.tokens.reduce((a,t)=>a+val(t)/(1+t.chg/100),0);
+  const d = total-prev, pct = prev? d/prev*100 : 0;
+  $('total').textContent = usd(total);
+  $('chg').innerHTML = `<span class="${d>=0?'up':'down'}">${d>=0?'+':'-'}${usd(Math.abs(d))} &nbsp; ${d>=0?'+':''}${pct.toFixed(2)}%</span>`;
+  const list = [...S.tokens].sort((a,b)=>val(b)-val(a));
+  $('tokens').innerHTML = list.length ? list.map(t=>`
+    <div class="row" onclick="openToken('${esc(t.sym)}')">
+      ${coin(t)}
+      <div class="mid"><b>${esc(t.name)}</b><small>${amt(t.bal)} ${esc(t.sym)}</small></div>
+      <div class="end"><b>${usd(val(t))}</b><small class="${t.chg>=0?'up':'down'}">${t.chg>=0?'+':''}${t.chg.toFixed(2)}%</small></div>
+    </div>`).join('') : '<div class="empty">No tokens yet</div>';
+  $('activity').innerHTML = S.activity.length ? S.activity.map(a=>`
+    <div class="tx"><div class="ic">${a.icon}</div>
+      <div class="mid"><b>${esc(a.title)}</b><small>${esc(a.sub)} · ${new Date(a.ts).toLocaleString([], {month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}</small></div>
+      <b style="font-size:14px">${esc(a.right||'')}</b></div>`).join('')
+    : '<div class="empty">No activity yet</div>';
+  save();
+}
+
+function go(v){
+  $('viewHome').style.display = v==='Home'?'':'none';
+  $('viewActivity').style.display = v==='Activity'?'':'none';
+  $('navHome').classList.toggle('on',v==='Home');
+  $('navActivity').classList.toggle('on',v==='Activity');
+}
+function toggleHide(){S.hidden=!S.hidden;render()}
+
+/* ---------- sheets ---------- */
+function openSheet(html){$('sheet').innerHTML=html;$('scrim').classList.add('show');requestAnimationFrame(()=>$('sheet').classList.add('show'))}
+function closeSheet(){$('sheet').classList.remove('show');$('scrim').classList.remove('show')}
+const head = t => `<h2>${t}<button class="iconbtn" onclick="closeSheet()">✕</button></h2>`;
+const num = v => { const n = parseFloat(String(v).replace(/,/g,'')); return isFinite(n)&&n>=0 ? n : NaN };
+
+function openToken(sym){
+  const t = tok(sym);
+  openSheet(`${head(esc(t.name))}
+    <div class="detail-top">${coin(t)}
+      <div class="big">${amt(t.bal)} ${esc(t.sym)}</div>
+      <small>${usd(val(t))} · ${price(t.price)} <span class="${t.chg>=0?'up':'down'}">${t.chg>=0?'+':''}${t.chg.toFixed(2)}%</span></small>
+    </div>
+    <label>Balance (${esc(t.sym)})</label><input id="eBal" inputmode="decimal" value="${t.bal}">
+    <label>Price (USD)</label><input id="ePrice" inputmode="decimal" value="${t.price}">
+    <label>24h change (%)</label><input id="eChg" inputmode="decimal" value="${t.chg}">
+    <button class="btn" onclick="saveToken('${esc(t.sym)}')">Save changes</button>
+    <div class="two">
+      <button class="btn ghost" onclick="openSend('${esc(t.sym)}')">Send</button>
+      <button class="btn ghost" onclick="openReceive()">Receive</button>
+    </div>
+    <button class="btn danger" onclick="removeToken('${esc(t.sym)}')">Remove token</button>`);
+}
+function saveToken(sym){
+  const t=tok(sym), b=num($('eBal').value), p=num($('ePrice').value), c=parseFloat($('eChg').value);
+  if(isNaN(b)||isNaN(p)||!isFinite(c)) return toast('Enter valid numbers');
+  t.bal=b;t.price=p;t.chg=c;render();closeSheet();toast(sym+' updated');
+}
+function removeToken(sym){S.tokens=S.tokens.filter(t=>t.sym!==sym);render();closeSheet()}
+
+function openAddToken(){
+  openSheet(`${head('Add token')}
+    <label>Symbol</label><input id="nSym" placeholder="e.g. WIF" maxlength="8" autocapitalize="characters">
+    <label>Name</label><input id="nName" placeholder="e.g. dogwifhat">
+    <label>Balance</label><input id="nBal" inputmode="decimal" value="100">
+    <label>Price (USD)</label><input id="nPrice" inputmode="decimal" value="1">
+    <button class="btn" onclick="addToken()">Add</button>`);
+}
+function addToken(){
+  const sym=$('nSym').value.trim().toUpperCase(), name=$('nName').value.trim()||sym;
+  const b=num($('nBal').value), p=num($('nPrice').value);
+  if(!sym) return toast('Symbol required');
+  if(tok(sym)) return toast('Token already exists');
+  if(isNaN(b)||isNaN(p)) return toast('Enter valid numbers');
+  S.tokens.push({sym,name,price:p,chg:0,bal:b,color:COLORS[S.tokens.length%COLORS.length]});
+  render();closeSheet();toast(sym+' added');
+}
+
+function tokenOptions(sel){return S.tokens.map(t=>`<option value="${esc(t.sym)}" ${t.sym===sel?'selected':''}>${esc(t.sym)} — ${amt(t.bal)}</option>`).join('')}
+
+function openSend(sym){
+  if(!S.tokens.length) return toast('Add a token first');
+  openSheet(`${head('Send')}
+    <label>Token</label><select id="sTok">${tokenOptions(sym)}</select>
+    <label>Recipient address</label><input id="sTo" placeholder="Paste address" autocomplete="off">
+    <label>Amount</label><input id="sAmt" inputmode="decimal" placeholder="0.00">
+    <button class="btn" onclick="doSend()">Send</button>`);
+}
+function doSend(){
+  const t=tok($('sTok').value), a=num($('sAmt').value), to=$('sTo').value.trim();
+  if(!to) return toast('Enter an address');
+  if(isNaN(a)||a<=0) return toast('Enter an amount');
+  if(a>t.bal) return toast('Insufficient balance');
+  t.bal-=a; log('➤','Sent '+t.sym,'To '+to.slice(0,4)+'…'+to.slice(-4),'-'+amt(a)+' '+t.sym);
+  render();closeSheet();toast('Sent '+amt(a)+' '+t.sym);
+}
+
+function openReceive(){
+  let cells='';
+  // decorative pattern derived from address (not a scannable code)
+  let seed=0;for(const ch of S.address)seed=(seed*31+ch.charCodeAt(0))>>>0;
+  const r=()=>(seed=(seed*1664525+1013904223)>>>0)/4294967296;
+  const finder=(x,y)=>{const inF=(ox,oy)=>x>=ox&&x<ox+7&&y>=oy&&y<oy+7&&(x===ox||x===ox+6||y===oy||y===oy+6||(x>ox+1&&x<ox+5&&y>oy+1&&y<oy+5));return inF(0,0)||inF(14,0)||inF(0,14)};
+  const inBox=(x,y)=>[[0,0],[14,0],[0,14]].some(([ox,oy])=>x>=ox-1&&x<ox+8&&y>=oy-1&&y<oy+8);
+  for(let y=0;y<21;y++)for(let x=0;x<21;x++){const on=inBox(x,y)?finder(x,y):r()>.5;cells+=`<i class="${on?'':'w'}"></i>`}
+  openSheet(`${head('Receive')}
+    <div class="qr">${cells}</div>
+    <div class="addr">${esc(S.address)}</div>
+    <button class="btn" onclick="copyAddr()">Copy address</button>`);
+}
+function copyAddr(){
+  (navigator.clipboard?navigator.clipboard.writeText(S.address):Promise.reject()).then(()=>toast('Address copied'),()=>toast('Copy not available'));
+}
+
+function openSwap(){
+  if(S.tokens.length<2) return toast('Need at least 2 tokens');
+  openSheet(`${head('Swap')}
+    <label>From</label><select id="wFrom" onchange="swapQuote()">${tokenOptions(S.tokens[0].sym)}</select>
+    <label>Amount</label><input id="wAmt" inputmode="decimal" placeholder="0.00" oninput="swapQuote()">
+    <label>To</label><select id="wTo" onchange="swapQuote()">${tokenOptions(S.tokens[1].sym)}</select>
+    <div class="addr" id="wQuote" style="margin-top:14px">—</div>
+    <button class="btn" onclick="doSwap()">Swap</button>`);
+}
+function swapQuote(){
+  const f=tok($('wFrom').value),t=tok($('wTo').value),a=num($('wAmt').value);
+  $('wQuote').textContent = (isNaN(a)||!t.price) ? '—' : `You receive ≈ ${amt(a*f.price/t.price)} ${t.sym}`;
+}
+function doSwap(){
+  const f=tok($('wFrom').value),t=tok($('wTo').value),a=num($('wAmt').value);
+  if(f===t) return toast('Pick two different tokens');
+  if(isNaN(a)||a<=0) return toast('Enter an amount');
+  if(a>f.bal) return toast('Insufficient balance');
+  if(!t.price) return toast('Target price is 0');
+  const out=a*f.price/t.price; f.bal-=a; t.bal+=out;
+  log('⇄','Swapped '+f.sym+' → '+t.sym,amt(a)+' '+f.sym,'+'+amt(out)+' '+t.sym);
+  render();closeSheet();toast('Swapped');
+}
+
+function openBuy(){
+  if(!S.tokens.length) return toast('Add a token first');
+  openSheet(`${head('Buy')}
+    <label>Token</label><select id="bTok">${tokenOptions('SOL')}</select>
+    <label>Amount (USD)</label><input id="bAmt" inputmode="decimal" placeholder="100">
+    <button class="btn" onclick="doBuy()">Buy</button>`);
+}
+function doBuy(){
+  const t=tok($('bTok').value),u=num($('bAmt').value);
+  if(isNaN(u)||u<=0) return toast('Enter an amount');
+  if(!t.price) return toast('Price is 0');
+  const q=u/t.price;t.bal+=q;log('＋','Bought '+t.sym,usd(u),'+'+amt(q)+' '+t.sym);
+  render();closeSheet();toast('Bought '+amt(q)+' '+t.sym);
+}
+
+function openAccount(){
+  openSheet(`${head('Account')}
+    <label>Account name</label><input id="aName" value="${esc(S.name)}" maxlength="20">
+    <label>Address</label><input id="aAddr" value="${esc(S.address)}" spellcheck="false">
+    <button class="btn" onclick="saveAccount()">Save</button>`);
+}
+function saveAccount(){
+  S.name=$('aName').value.trim()||'Account 1';S.address=$('aAddr').value.trim()||S.address;
+  render();closeSheet();
+}
+
+function openSettings(){
+  openSheet(`${head('Settings')}
+    <button class="btn ghost" onclick="openAccount()">Edit account name / address</button>
+    <button class="btn ghost" onclick="fluctuate()">Simulate market move</button>
+    <button class="btn ghost" onclick="S.activity=[];render();closeSheet();toast('Activity cleared')">Clear activity</button>
+    <button class="btn danger" onclick="resetAll()">Reset to defaults</button>
+    <div class="foot">Specter Demo Wallet · for mockups &amp; demos only.<br>Balances are fictional and stored only in this browser.</div>`);
+}
+function fluctuate(){
+  S.tokens.forEach(t=>{ if(['USDT','USDC'].includes(t.sym)) return; const c=(Math.random()*8-4); t.chg=+c.toFixed(2); t.price=+(t.price*(1+(Math.random()*.04-.02))).toPrecision(6) });
+  render();closeSheet();toast('Market updated');
+}
+function resetAll(){ if(confirm('Reset everything?')){S=DEFAULTS();render();closeSheet()} }
+
+render();
+</script>
+</body>
+</html>
