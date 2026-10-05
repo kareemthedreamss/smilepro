@@ -7,7 +7,7 @@
 <title>Specter Wallet (Demo)</title>
 <style>
   :root{
-    --bg:#151515; --card:#222; --card2:#2c2c2c; --text:#fff; --muted:#999;
+    --bg:#181818; --card:#2a2a2a; --card2:#333; --text:#fff; --muted:#999;
     --accent:#ab9ff2; --green:#21e56f; --red:#ff5b5b; --line:#333;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -252,15 +252,18 @@ function openSend(sym){
     <label>Token</label><select id="sTok">${tokenOptions(sym)}</select>
     <label>Recipient address</label><input id="sTo" placeholder="Paste address" autocomplete="off">
     <label>Amount</label><input id="sAmt" inputmode="decimal" placeholder="0.00">
-    <button class="btn" onclick="doSend()">Send</button>`);
+    <button class="btn" onclick="doSend()">Proceed</button>`);
 }
 function doSend(){
   const t=tok($('sTok').value), a=num($('sAmt').value), to=$('sTo').value.trim();
   if(!to) return toast('Enter an address');
   if(isNaN(a)||a<=0) return toast('Enter an amount');
-  if(a>t.bal) return toast('Insufficient balance');
-  t.bal-=a; log('➤','Sent '+t.sym,'To '+to.slice(0,4)+'…'+to.slice(-4),'-'+amt(a)+' '+t.sym);
-  render();closeSheet();toast('Sent '+amt(a)+' '+t.sym);
+  done('Send submitted', amt(a)+' '+t.sym+' to '+to.slice(0,4)+'…'+to.slice(-4));
+}
+function done(title,sub){
+  openSheet(`${head('')}<div class="detail-top"><div class="coin" style="background:var(--accent);color:#151515">✓</div><div class="big" style="font-size:22px">${esc(title)}</div><small>${esc(sub)}</small></div>
+    <div class="addr">Demo only. Nothing was sent or bought and balances did not change.</div>
+    <button class="btn" onclick="closeSheet()">Done</button>`);
 }
 
 function openReceive(){
@@ -309,14 +312,12 @@ function openBuy(){
   openSheet(`${head('Buy')}
     <label>Token</label><select id="bTok">${tokenOptions('SOL')}</select>
     <label>Amount (USD)</label><input id="bAmt" inputmode="decimal" placeholder="100">
-    <button class="btn" onclick="doBuy()">Buy</button>`);
+    <button class="btn" onclick="doBuy()">Proceed</button>`);
 }
 function doBuy(){
   const t=tok($('bTok').value),u=num($('bAmt').value);
   if(isNaN(u)||u<=0) return toast('Enter an amount');
-  if(!t.price) return toast('Price is 0');
-  const q=u/t.price;t.bal+=q;log('＋','Bought '+t.sym,usd(u),'+'+amt(q)+' '+t.sym);
-  render();closeSheet();toast('Bought '+amt(q)+' '+t.sym);
+  done('Purchase submitted', usd(u)+' of '+t.sym);
 }
 
 function openAccount(){
