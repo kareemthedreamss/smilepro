@@ -283,12 +283,9 @@ function doSend(){
   const t=tok($('sTok').value), a=num($('sAmt').value), to=$('sTo').value.trim();
   if(!to) return toast('Enter an address');
   if(isNaN(a)||a<=0) return toast('Enter an amount');
-  done('Send submitted', amt(a)+' '+t.sym+' to '+to.slice(0,4)+'…'+to.slice(-4));
-}
-function done(title,sub){
-  openSheet(`${head('')}<div class="detail-top"><div class="coin" style="background:var(--accent);color:#151515">✓</div><div class="big" style="font-size:22px">${esc(title)}</div><small>${esc(sub)}</small></div>
-    <div class="addr">Demo only. Nothing was sent or bought and balances did not change.</div>
-    <button class="btn" onclick="closeSheet()">Done</button>`);
+  if(a>t.bal) return toast('Insufficient balance');
+  t.bal-=a; log('➤','Sent '+t.sym,'To '+to.slice(0,4)+'…'+to.slice(-4),'-'+amt(a)+' '+t.sym);
+  render();closeSheet();toast('Sent '+amt(a)+' '+t.sym);
 }
 
 function openReceive(){
@@ -342,7 +339,9 @@ function openBuy(){
 function doBuy(){
   const t=tok($('bTok').value),u=num($('bAmt').value);
   if(isNaN(u)||u<=0) return toast('Enter an amount');
-  done('Purchase submitted', usd(u)+' of '+t.sym);
+  if(!t.price) return toast('Price is 0');
+  const q=u/t.price;t.bal+=q;log('＋','Bought '+t.sym,usd(u),'+'+amt(q)+' '+t.sym);
+  render();closeSheet();toast('Bought '+amt(q)+' '+t.sym);
 }
 
 function openAccount(){
